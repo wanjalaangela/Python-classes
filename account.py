@@ -1,111 +1,133 @@
+from datetime import datetime
+
+class Transaction:
+    def __init__(self, narration, amount, transaction_type):
+        self.date_time = datetime.now()
+        self.narration = narration
+        self.amount = amount
+        self.transaction_type = transaction_type 
+
 class Account:
-    def __init__(self,name):
+    def __init__(self, name):
         self.name = name
-        self.balance = 0
-        self.deposits = []
-        self.withdrawals = []
+        self._balance = 0  
         self.frozen = False
         self.loan = 0
-        self.transactions =[]
+        self.transactions = []  
         self.min_balance = 500
-        self.new_account = []
-        
-    
+
     def deposit(self, amount):
         if amount > 0:
-            self.deposits.append(amount)
-            self.balance += amount
-            self.transactions.append(f" You deposited:{amount}")
-            return f"Confirmed,new balance is {self.balance}."
-
-
-            # WITHDRAW
+            self._balance += amount
+            transaction = Transaction(f"You deposited: {amount}", amount, "Deposit")
+            self.transactions.append(transaction)
+            return f"Confirmed, new balance is {self.get_balance()}."
+        return "Deposit amount must be positive."
 
     def withdraw(self, amount):
-        if amount > 0 and self.balance-amount >self.min_balance:
-            self.withdrawals.append(amount)
-            self.balance -= amount
-            self.transactions.append(f"You have withdrawn {amount}")
-            return f"your new balance is {self.balance}"
-
-        if amount > self.balance:
+        if self.frozen:
+            return "Account is frozen."
+        if amount > 0 and self._balance - amount >= self.min_balance:
+            self._balance -= amount
+            transaction = Transaction(f"You have withdrawn: {amount}", amount, "Withdrawal")
+            self.transactions.append(transaction)
+            return f"Your new balance is {self.get_balance()}."
+        if amount > self._balance:
             return "Insufficient funds."
+        return "Withdrawal amount must be positive."
 
-    #  TRANSFER FUNDS
-
-    def transfer_funds(self, amount):
-        if amount <=0:
-            return "You can only transfer positive amount"
-        self.new_account.append(amount)
-        self.balance -= amount
-        self.transaction.append(f"Transferred {amount} to {self.new_account}")
-        return f"New balance is {self.balance}"
-
-    #  GET BALANCE
+    def transfer_funds(self, amount, other_account):
+        if amount <= 0:
+            return "You can only transfer a positive amount."
+        if self._balance - amount < self.min_balance:
+            return "Insufficient funds for transfer."
+        self._balance -= amount
+        other_account.deposit(amount)  
+        transaction = Transaction(f"Transferred {amount} to {other_account.name}", amount, "Transfer")
+        self.transactions.append(transaction)
+        return f"New balance is {self.get_balance()}."
 
     def get_balance(self):
-        return f" Dear {self.name} your current balance is {self.balance}"
-
-    #   LOANS
+        return self._balance  # Return the encapsulated balance
 
     def get_loan(self, amount):
-        if amount>0:
+        if amount > 0:
             self.loan += amount
-        return f"You requested a loan of {amount}"
-
-    #   PAY LOAN
+            self._balance += amount
+            transaction = Transaction(f"Loan requested: {amount}", amount, "Loan")
+            self.transactions.append(transaction)
+            return f"You requested a loan of {amount}."
+        return "Loan amount must be positive."
 
     def pay_loan(self, amount):
-        if amount > 0 :
-            self.loan -= amount
-            self.balance -= amount
-            return f"You repaid {amount} and your new loan is {self.loan}"
-
-
-    #    DETAILS 
+        if amount > 0:
+            if amount <= self.loan:
+                self.loan -= amount
+                self._balance -= amount
+                transaction = Transaction(f"Loan repaid: {amount}", amount, "Loan Repayment")
+                self.transactions.append(transaction)
+                return f"You repaid {amount} and your new loan is {self.loan}."
+            else:
+                excess_payment = amount - self.loan
+                self._balance -= self.loan  
+                self._balance += excess_payment  
+                transaction = Transaction(f"Loan repaid: {self.loan} (excess payment: {excess_payment})", self.loan, "Loan Repayment")
+                self.transactions.append(transaction)
+                return f"You repaid your loan of {self.loan}. Excess payment of {excess_payment} has been deposited back to your account."
+        return "Repayment amount must be positive."
 
     def account_details(self):
-        return f"{self.name},your balance is {self.balance}and your loan is {self.loan}"
+        return f"{self.name}, your balance is {self.get_balance()} and your loan is {self.loan}."
 
-        # OWNERSHIP
-
-    def transfer_ownership (self, new_name):
+    def transfer_ownership(self, new_name):
         self.name = new_name
-        return f"Changed ownership to {self.name}"
+        return f"Changed ownership to {self.name}."
 
-    #  STATEMENT
+    def statement(self):
+        return "\n".join([f"{trans.date_time}: {trans.narration} - {trans.amount} ({trans.transaction_type})" for trans in self.transactions])
 
-    def statement (self):
-        for i in self.transaction:
-            return f"Your transaction is {self.transaction}"
+    def interest(self):
+        interest = self._balance * 0.05
+        self._balance += interest
+        transaction = Transaction(f"Interest applied: {interest}", interest, "Interest")
+        self.transactions.append(transaction)
+        return f"Your interest was {interest} and your new balance is {self.get_balance()}."
 
-    # INTEREST
-
-    def interest (self):
-        interest = self.balance * 0.05
-        self.balance += interest
-        self.transaction.append(f"Interest applied to amount is {interest}")
-        return f"Your interest was {interest}and your new balance is {self.balance}"
-
-
-        # Freeze
-
-    def freez(self):
+    def freeze(self):
         self.frozen = True
-        return f"Account has been frozen for security reason"
+        return "Account has been frozen for security reasons."
 
-        # UNFREEZ
-
-    def un_freeze(self):
+    def unfreeze(self):
         self.frozen = False
-        return f"Account has been unfrozen"
-
-        # CLOSE ACCOUNT
+        return "Account has been unfrozen."
 
     def close_account(self):
-        self.balance = 0
-        self.deposits.clear()
-        self.withdrawals.clear()
-        self.loan.clear()
-        self.transaction.clear()
+        self._balance = 0
+        self.loan = 0  
+        self.transactions.clear()
         self.min_balance = 0
+        return "Account closed."
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
