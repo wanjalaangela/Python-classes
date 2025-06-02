@@ -48,7 +48,7 @@ class Account:
         return f"New balance is {self.get_balance()}."
 
     def get_balance(self):
-        return self._balance  # Return the encapsulated balance
+        return self._balance  
 
     def get_loan(self, amount):
         if amount > 0:
@@ -84,7 +84,8 @@ class Account:
         return f"Changed ownership to {self.name}."
 
     def statement(self):
-        return "\n".join([f"{trans.date_time}: {trans.narration} - {trans.amount} ({trans.transaction_type})" for trans in self.transactions])
+        for trans in self.transactions:
+            return "\n".join([f"{trans.date_time}: {trans.narration} - {trans.amount} ({trans.transaction_type})"])
 
     def interest(self):
         interest = self._balance * 0.05
