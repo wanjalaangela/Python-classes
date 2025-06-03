@@ -15,9 +15,11 @@ class Account:
         self.loan = 0
         self.transactions = []  
         self.min_balance = 500
+        self.deposits = []
 
     def deposit(self, amount):
         if amount > 0:
+            self.deposits.append(amount)
             self._balance += amount
             transaction = Transaction(f"You deposited: {amount}", amount, "Deposit")
             self.transactions.append(transaction)
@@ -50,14 +52,24 @@ class Account:
     def get_balance(self):
         return self._balance  
 
+
+    def calculate_loan_limit(self):
+        total_deposits = sum(self.deposits) 
+        loan_limit = total_deposits//2
+        return loan_limit
+
+
     def get_loan(self, amount):
-        if amount > 0:
+        if amount < 0:
+            return "Input a positive amount"
+        if amount <= self.calculate_loan_limit() : 
             self.loan += amount
             self._balance += amount
             transaction = Transaction(f"Loan requested: {amount}", amount, "Loan")
             self.transactions.append(transaction)
             return f"You requested a loan of {amount}."
-        return "Loan amount must be positive."
+        else:
+            return "Check your loan limit"
 
     def pay_loan(self, amount):
         if amount > 0:
